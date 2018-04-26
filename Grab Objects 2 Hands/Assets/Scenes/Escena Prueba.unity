@@ -1250,9 +1250,10 @@ MonoBehaviour:
   derecha: {fileID: 1738984097}
   izquierda: {fileID: 912642936}
   ejeRotacion: {x: 0, y: 0, z: 0}
-  anguloHorizontal: 0
-  anguloVertical: 0
-  actualizarAngulo: 0
+  valorY: 0
+  anguloEjeY: 0
+  anguloEjeZ: 0
+  anguloEjeX: 0
 --- !u!114 &1788510347
 MonoBehaviour:
   m_ObjectHideFlags: 0
