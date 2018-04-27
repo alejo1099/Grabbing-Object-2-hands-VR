@@ -124,17 +124,17 @@ public class RotarObjeto : MonoBehaviour
 
     private void CalcularPlanoCartesianoLocal()
     {
-        Vector3 posicionPadre = transform.position;
+        Vector3 objeto = transform.position;
         Vector3 posicionCabeza = cabeza.position;
         Vector3 posicionDerecha = derecha.position;
         Vector3 posicionIzquierda = izquierda.position;
-        posicionDerecha.y = posicionIzquierda.y = posicionCabeza.y = posicionPadre.y;
+        posicionDerecha.y = posicionIzquierda.y = posicionCabeza.y = objeto.y;
 
-        Vector3 planoY = (posicionPadre - posicionCabeza);
+        Vector3 planoY = (objeto - posicionCabeza);
         Vector3 planoX = Quaternion.Euler(0f, 90f, 0f) * planoY;
         Vector3 planoZ = Vector3.Cross(planoY, planoX);
 
-        Vector3 posicionDerechaSobreElPlano = (posicionDerecha - posicionPadre).normalized;
+        Vector3 posicionDerechaSobreElPlano = (posicionDerecha - objeto).normalized;
         float anguloDerecha = Vector3.SignedAngle(posicionDerechaSobreElPlano, planoY, planoZ);
 
         VerificarCuadrante(anguloDerecha);
