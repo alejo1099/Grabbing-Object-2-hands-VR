@@ -5,17 +5,12 @@ public enum DireccionUp
     Arriba, Abajo
 }
 
-public enum ManoInversa
-{
-    Derecha, izquierda
-}
-
 public class RotarObjeto : MonoBehaviour
 {
     public DireccionUp direccionUp;
-    public ManoInversa manoInversa;
+    public Cuadrantes cuadranteDerecha;
 
-    public Transform derecha, izquierda;
+    public Transform derecha, izquierda, cabeza;
 
     public Vector3 ejeRotacion;
 
@@ -76,7 +71,7 @@ public class RotarObjeto : MonoBehaviour
 
     private void VerificarUp()
     {
-        float punto = Vector3.Dot(transform.up, Vector3.up);
+        //float punto = Vector3.Dot(transform.up, Vector3.up);
         // if (punto >= 0)
         //     direccionUp = DireccionUp.Arriba;
         // else if (punto <= 0)
@@ -84,14 +79,42 @@ public class RotarObjeto : MonoBehaviour
 
         if (!actualizarRotacion)
         {
-            //   Vector3 resta = (derecha.position - izquierda.position).normalized;
-            if (derecha.position.x < izquierda.position.x)
+            CalcularPlanoCartesiano();
+            if (cuadranteDerecha == Cuadrantes.II || cuadranteDerecha == Cuadrantes.III)
                 direccionUp = DireccionUp.Abajo;
             else
                 direccionUp = DireccionUp.Arriba;
         }
+    }
 
+    private void CalcularPlanoCartesiano()
+    {
+        Vector3 posicionPadre = transform.position;
+        Vector3 posicionCabeza = cabeza.position;
+        Vector3 posicionDerecha = derecha.position;
+        Vector3 posicionIzquierda = izquierda.position;
+        posicionDerecha.y = posicionIzquierda.y = posicionCabeza.y = posicionPadre.y;
 
+        Vector3 planoY = (posicionPadre - posicionCabeza);
+        Vector3 planoX = Quaternion.Euler(0f, 90f, 0f) * planoY;
+        Vector3 planoZ = Vector3.Cross(planoY, planoX);
+
+        Vector3 posicionDerechaSobreElPlano = (posicionDerecha - posicionPadre).normalized;
+        float anguloDerecha = Vector3.SignedAngle(posicionDerechaSobreElPlano, planoY, planoZ);
+
+        VerificarCuadrante(anguloDerecha);
+    }
+
+    private void VerificarCuadrante(float angulo)
+    {
+        if (angulo > -90f && angulo < 0f)
+            cuadranteDerecha = Cuadrantes.I;
+        else if (angulo > 0f && angulo < 90f)
+            cuadranteDerecha = Cuadrantes.II;
+        else if (angulo > 90f && angulo < 180f)
+            cuadranteDerecha = Cuadrantes.III;
+        else if (angulo > -180f && angulo < -90f)
+            cuadranteDerecha = Cuadrantes.IV;
     }
 
     private void PoderVerificar()
