@@ -5,10 +5,16 @@ public enum DireccionUp
     Arriba, Abajo
 }
 
+public enum OrientacionObjeto
+{
+    Cabeza, DeCabeza
+}
+
 public class RotarObjeto : MonoBehaviour
 {
     public DireccionUp direccionUp;
     public Cuadrantes cuadranteDerecha;
+    public OrientacionObjeto orientacionObjeto;
 
     public Transform derecha, izquierda, cabeza;
 
@@ -17,7 +23,7 @@ public class RotarObjeto : MonoBehaviour
     private float valorY;
 
     [Range(0f, 0.95f)]
-    public float puntoLimite;
+    public float puntoLimite = 0.8f;
 
     private float anguloEjeY;
     private float anguloEjeZ;
@@ -27,7 +33,7 @@ public class RotarObjeto : MonoBehaviour
 
     public float punto;
 
-    private void FixedUpdate()
+    private void Update()
     {
         ActualizarPosicion();
         ActualizarRotacion();
@@ -52,14 +58,14 @@ public class RotarObjeto : MonoBehaviour
         if (actualizarRotacion)
         {
             if (direccionUp == DireccionUp.Arriba)
-                VerificarAnguloCartesianoEjeY();
+                VerificarAnguloCartesianoGlobalEjeY();
             else if (direccionUp == DireccionUp.Abajo)
                 VerificarAnguloCartesianoEjeYInverso();
 
             Vector3 direccion = (derecha.position - izquierda.position).normalized;
             Vector3 arriba = Quaternion.Euler(ejeRotacion.normalized) * direccion;
             Quaternion rotacionRelativa = Quaternion.LookRotation(direccion, arriba);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotacionRelativa, Time.deltaTime * 6f);
+            transform.rotation = rotacionRelativa;//Quaternion.Slerp(transform.rotation, rotacionRelativa, Time.deltaTime * 6f);
         }
         else
         {
@@ -69,25 +75,54 @@ public class RotarObjeto : MonoBehaviour
         }
     }
 
+    private void PoderVerificar()
+    {
+        Vector3 resta = (derecha.position - izquierda.position).normalized;
+        punto = Vector3.Dot(resta, Vector3.up);
+
+        if (punto >= puntoLimite || punto <= -puntoLimite)
+        {
+            actualizarRotacion = false;
+        }
+        else
+        {
+            actualizarRotacion = true;
+        }
+    }
+
     private void VerificarUp()
     {
-        //float punto = Vector3.Dot(transform.up, Vector3.up);
-        // if (punto >= 0)
-        //     direccionUp = DireccionUp.Arriba;
-        // else if (punto <= 0)
-        //     direccionUp = DireccionUp.Abajo;
-
         if (!actualizarRotacion)
         {
-            CalcularPlanoCartesiano();
+            CalcularPlanoCartesianoLocal();
+
+            // if (orientacionObjeto == OrientacionObjeto.Cabeza)
+            // {
             if (cuadranteDerecha == Cuadrantes.II || cuadranteDerecha == Cuadrantes.III)
                 direccionUp = DireccionUp.Abajo;
             else
                 direccionUp = DireccionUp.Arriba;
+            // }
+            // else if (orientacionObjeto == OrientacionObjeto.DeCabeza)
+            // {
+            // if (cuadranteDerecha == Cuadrantes.II || cuadranteDerecha == Cuadrantes.III)
+            //     direccionUp = DireccionUp.Arriba;
+            // else
+            //     direccionUp = DireccionUp.Abajo;
+            // }
         }
     }
 
-    private void CalcularPlanoCartesiano()
+    private void CalcularUp()
+    {
+        float dot = Vector3.Dot(transform.up, Vector3.up);
+        if (dot > 0f)
+            orientacionObjeto = OrientacionObjeto.Cabeza;
+        else if (dot < 0f)
+            orientacionObjeto = OrientacionObjeto.DeCabeza;
+    }
+
+    private void CalcularPlanoCartesianoLocal()
     {
         Vector3 posicionPadre = transform.position;
         Vector3 posicionCabeza = cabeza.position;
@@ -117,28 +152,7 @@ public class RotarObjeto : MonoBehaviour
             cuadranteDerecha = Cuadrantes.IV;
     }
 
-    private void PoderVerificar()
-    {
-        Vector3 resta = (derecha.position - izquierda.position).normalized;
-        punto = Vector3.Dot(resta, Vector3.up);
-
-        if (punto >= puntoLimite || punto <= -puntoLimite)
-        {
-            actualizarRotacion = false;
-        }
-        else
-        {
-            actualizarRotacion = true;
-        }
-
-        // float productoPunto = Vector3.Dot(transform.up, Vector3.up);
-        // if (productoPunto >= 0)
-        //     direccionUp = DireccionUp.Arriba;
-        // else if (productoPunto <= 0)
-        //     direccionUp = DireccionUp.Abajo;
-    }
-
-    private void VerificarAnguloCartesianoEjeY()
+    private void VerificarAnguloCartesianoGlobalEjeY()
     {
         Vector3 direccion = (derecha.position - izquierda.position).normalized;
         direccion.y = 0;
@@ -207,8 +221,6 @@ public class RotarObjeto : MonoBehaviour
         direccion.x = 0;
         anguloEjeX = Vector3.SignedAngle(direccion, Vector3.up, Vector3.right);
     }
-
-
 
     private void VerificarAnguloCartesianoEjeYInverso()
     {
