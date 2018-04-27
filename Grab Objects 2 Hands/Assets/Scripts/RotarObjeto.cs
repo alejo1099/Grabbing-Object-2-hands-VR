@@ -5,28 +5,30 @@ public enum DireccionUp
     Arriba, Abajo
 }
 
+public enum ManoInversa
+{
+    Derecha, izquierda
+}
+
 public class RotarObjeto : MonoBehaviour
 {
-    //Cuando se esta rotando e interpolando el angulo, si por ejemplo, el angulo que (-45, 0, 45),
-    // entonces queda una rotacion que hace voltear al objeto, alrededor de -16 en el eje Z y si se 
-    //suma con el valor que deberia estar, quedaria (-45, -29, 45), y -29 - 16 = -45, por lo que hay relacion en esa rotacion tambien
-
-    //El eje Y con el Vector -29.99999, 0, 60,00001 necesita -22.37 en el valor Y del vector para acomodarse a su rotacion
-    //El eje Y con el Vector -60.00001, 0, 29,99999 necesita -33.435 en el valor Y del vector para acomodarse a su rotacion
-
     public DireccionUp direccionUp;
+    public ManoInversa manoInversa;
 
     public Transform derecha, izquierda;
 
     public Vector3 ejeRotacion;
 
-    public float valorY;
+    private float valorY;
 
-    public float anguloEjeY;
-    public float anguloEjeZ;
-    public float anguloEjeX;
+    [Range(0f, 0.95f)]
+    public float puntoLimite;
 
-    public bool actualizarRotacion = true;
+    private float anguloEjeY;
+    private float anguloEjeZ;
+    private float anguloEjeX;
+
+    private bool actualizarRotacion = true;
 
     public float punto;
 
@@ -49,8 +51,8 @@ public class RotarObjeto : MonoBehaviour
     {
         VerificarAnguloCartesianoEjeZ();
         VerificarAnguloCartesianoEjeX();
-        VerificarUp();
         PoderVerificar();
+        VerificarUp();
 
         if (actualizarRotacion)
         {
@@ -62,7 +64,7 @@ public class RotarObjeto : MonoBehaviour
             Vector3 direccion = (derecha.position - izquierda.position).normalized;
             Vector3 arriba = Quaternion.Euler(ejeRotacion.normalized) * direccion;
             Quaternion rotacionRelativa = Quaternion.LookRotation(direccion, arriba);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotacionRelativa, Time.deltaTime * 4f);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotacionRelativa, Time.deltaTime * 6f);
         }
         else
         {
@@ -72,14 +74,45 @@ public class RotarObjeto : MonoBehaviour
         }
     }
 
+    private void VerificarUp()
+    {
+        float punto = Vector3.Dot(transform.up, Vector3.up);
+        // if (punto >= 0)
+        //     direccionUp = DireccionUp.Arriba;
+        // else if (punto <= 0)
+        //     direccionUp = DireccionUp.Abajo;
+
+        if (!actualizarRotacion)
+        {
+            //   Vector3 resta = (derecha.position - izquierda.position).normalized;
+            if (derecha.position.x < izquierda.position.x)
+                direccionUp = DireccionUp.Abajo;
+            else
+                direccionUp = DireccionUp.Arriba;
+        }
+
+
+    }
+
     private void PoderVerificar()
     {
         Vector3 resta = (derecha.position - izquierda.position).normalized;
         punto = Vector3.Dot(resta, Vector3.up);
-        if (punto >= 0.9f || punto <= -0.9f)
+
+        if (punto >= puntoLimite || punto <= -puntoLimite)
+        {
             actualizarRotacion = false;
+        }
         else
+        {
             actualizarRotacion = true;
+        }
+
+        // float productoPunto = Vector3.Dot(transform.up, Vector3.up);
+        // if (productoPunto >= 0)
+        //     direccionUp = DireccionUp.Arriba;
+        // else if (productoPunto <= 0)
+        //     direccionUp = DireccionUp.Abajo;
     }
 
     private void VerificarAnguloCartesianoEjeY()
@@ -152,14 +185,7 @@ public class RotarObjeto : MonoBehaviour
         anguloEjeX = Vector3.SignedAngle(direccion, Vector3.up, Vector3.right);
     }
 
-    private void VerificarUp()
-    {
-        float punto = Vector3.Dot(transform.up, Vector3.up);
-        if (punto >= 0)
-            direccionUp = DireccionUp.Arriba;
-        else if (punto <= 0)
-            direccionUp = DireccionUp.Abajo;
-    }
+
 
     private void VerificarAnguloCartesianoEjeYInverso()
     {
