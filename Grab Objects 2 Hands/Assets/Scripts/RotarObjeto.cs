@@ -7,24 +7,12 @@ public enum DireccionUp
 
 public class RotarObjeto : MonoBehaviour
 {
-    //Si derecha esta a la derecha del objeto, y el objeto apunta hacia arriba, entonces el valor correcto es (0,0,90)
-    //Si derecha esta al frente del objeto, y el objeto apunta hacia arriba, entonces el valor correcto es (-90,0,0)
-
-    //Si derecha esta diagonal de izquierda, y se encuentra al frente y a la derecha, y el objeto apunta hacia arriba, entonces el valor correcto es (-45,0,45)
-    //El angulo depende de la posicion, y se puede ir promediando
-
-    //Si derecha esta a la izquierda del objeto, y el objeto apunta hacia arriba, entonces el valor correcto es (0,0,-90)
-    //Si derecha esta atras del objeto, y el objeto apunta hacia arriba, entonces el valor correcto es (90,0,0)
-
-    //Cuando se esta rotando e interpolando el angulo, si por ejemplo, el angulo que (-45, 0, 45), entonces queda una rotacion que hace voltear al objeto, alrededor de -16 en el eje Z
-    //y si se suma con el valor que deberia estar, quedaria (-45, -29, 45), y -29 - 16 = -45, por lo que hay relacion en esa rotacion tambien
+    //Cuando se esta rotando e interpolando el angulo, si por ejemplo, el angulo que (-45, 0, 45),
+    // entonces queda una rotacion que hace voltear al objeto, alrededor de -16 en el eje Z y si se 
+    //suma con el valor que deberia estar, quedaria (-45, -29, 45), y -29 - 16 = -45, por lo que hay relacion en esa rotacion tambien
 
     //El eje Y con el Vector -29.99999, 0, 60,00001 necesita -22.37 en el valor Y del vector para acomodarse a su rotacion
     //El eje Y con el Vector -60.00001, 0, 29,99999 necesita -33.435 en el valor Y del vector para acomodarse a su rotacion
-
-    //-22.37  -10.472
-
-    //Si la z esta entre 1 y 179, se puede girar alrededor de este sin ningun problema
 
     public DireccionUp direccionUp;
 
@@ -38,7 +26,11 @@ public class RotarObjeto : MonoBehaviour
     public float anguloEjeZ;
     public float anguloEjeX;
 
-    private void Update()
+    public bool actualizarRotacion = true;
+
+    public float punto;
+
+    private void FixedUpdate()
     {
         ActualizarPosicion();
         ActualizarRotacion();
@@ -58,15 +50,36 @@ public class RotarObjeto : MonoBehaviour
         VerificarAnguloCartesianoEjeZ();
         VerificarAnguloCartesianoEjeX();
         VerificarUp();
+        PoderVerificar();
 
-        if (direccionUp == DireccionUp.Arriba)
-            VerificarAnguloCartesianoEjeY();
-        else if (direccionUp == DireccionUp.Abajo)
-            VerificarAnguloCartesianoEjeYInverso();
+        if (actualizarRotacion)
+        {
+            if (direccionUp == DireccionUp.Arriba)
+                VerificarAnguloCartesianoEjeY();
+            else if (direccionUp == DireccionUp.Abajo)
+                VerificarAnguloCartesianoEjeYInverso();
 
-        Vector3 direccion = (derecha.position - izquierda.position).normalized;
-        Vector3 arriba = Quaternion.Euler(ejeRotacion) * direccion;
-        transform.rotation = Quaternion.LookRotation(direccion, arriba);
+            Vector3 direccion = (derecha.position - izquierda.position).normalized;
+            Vector3 arriba = Quaternion.Euler(ejeRotacion.normalized) * direccion;
+            Quaternion rotacionRelativa = Quaternion.LookRotation(direccion, arriba);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotacionRelativa, Time.deltaTime * 4f);
+        }
+        else
+        {
+            Vector3 direccion = (derecha.position - izquierda.position).normalized;
+            Quaternion rotacionRelativa = Quaternion.LookRotation(direccion, transform.up);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotacionRelativa, Time.deltaTime * 10f);
+        }
+    }
+
+    private void PoderVerificar()
+    {
+        Vector3 resta = (derecha.position - izquierda.position).normalized;
+        punto = Vector3.Dot(resta, Vector3.up);
+        if (punto >= 0.9f || punto <= -0.9f)
+            actualizarRotacion = false;
+        else
+            actualizarRotacion = true;
     }
 
     private void VerificarAnguloCartesianoEjeY()
@@ -92,7 +105,6 @@ public class RotarObjeto : MonoBehaviour
         Vector3 vectorEjeZ = new Vector3(0f, valorY, 90f);
 
         Vector3 vectorFinal = Vector3.Lerp(vectorEjeX, vectorEjeZ, interpolacion);
-
         ejeRotacion = vectorFinal;
     }
 
@@ -103,7 +115,6 @@ public class RotarObjeto : MonoBehaviour
         Vector3 vectorEjeZ = new Vector3(0f, valorY, -90f);
 
         Vector3 vectorFinal = Vector3.Lerp(vectorEjeX, vectorEjeZ, interpolacion);
-
         ejeRotacion = vectorFinal;
     }
 
@@ -114,7 +125,6 @@ public class RotarObjeto : MonoBehaviour
         Vector3 vectorEjeZ = new Vector3(0f, valorY, -90f);
 
         Vector3 vectorFinal = Vector3.Lerp(vectorEjeZ, vectorEjeX, interpolacion);
-
         ejeRotacion = vectorFinal;
     }
 
@@ -125,7 +135,6 @@ public class RotarObjeto : MonoBehaviour
         Vector3 vectorEjeZ = new Vector3(0f, valorY, 90f);
 
         Vector3 vectorFinal = Vector3.Lerp(vectorEjeZ, vectorEjeX, interpolacion);
-
         ejeRotacion = vectorFinal;
     }
 
@@ -145,16 +154,16 @@ public class RotarObjeto : MonoBehaviour
 
     private void VerificarUp()
     {
-        // if (anguloEjeZ <= 0 && anguloEjeZ >= -180f)
-        //     direccionUp = DireccionUp.Arriba;
-        // else if (anguloEjeZ >= 0 && anguloEjeZ <= 180f)
-        //     direccionUp = DireccionUp.Abajo;
+        float punto = Vector3.Dot(transform.up, Vector3.up);
+        if (punto >= 0)
+            direccionUp = DireccionUp.Arriba;
+        else if (punto <= 0)
+            direccionUp = DireccionUp.Abajo;
     }
 
     private void VerificarAnguloCartesianoEjeYInverso()
     {
         Vector3 direccion = (derecha.position - izquierda.position).normalized;
-        // anguloVertical = Vector3.Dot(direccion, Vector3.up);
         direccion.y = 0;
         anguloEjeY = Vector3.SignedAngle(direccion, Vector3.forward, Vector3.up);
 
@@ -175,7 +184,6 @@ public class RotarObjeto : MonoBehaviour
         Vector3 vectorEjeZ = new Vector3(0f, valorY, -90f);
 
         Vector3 vectorFinal = Vector3.Lerp(vectorEjeX, vectorEjeZ, interpolacion);
-
         ejeRotacion = vectorFinal;
     }
 
@@ -186,7 +194,6 @@ public class RotarObjeto : MonoBehaviour
         Vector3 vectorEjeZ = new Vector3(0f, valorY, 90f);
 
         Vector3 vectorFinal = Vector3.Lerp(vectorEjeX, vectorEjeZ, interpolacion);
-
         ejeRotacion = vectorFinal;
     }
 
@@ -197,7 +204,6 @@ public class RotarObjeto : MonoBehaviour
         Vector3 vectorEjeZ = new Vector3(0f, valorY, 90f);
 
         Vector3 vectorFinal = Vector3.Lerp(vectorEjeZ, vectorEjeX, interpolacion);
-
         ejeRotacion = vectorFinal;
     }
 
@@ -208,7 +214,6 @@ public class RotarObjeto : MonoBehaviour
         Vector3 vectorEjeZ = new Vector3(0f, valorY, -90f);
 
         Vector3 vectorFinal = Vector3.Lerp(vectorEjeZ, vectorEjeX, interpolacion);
-
         ejeRotacion = vectorFinal;
     }
 }

@@ -565,7 +565,7 @@ TrailRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 912642934}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -1056,7 +1056,7 @@ TrailRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1738984095}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -1161,7 +1161,6 @@ GameObject:
   - component: {fileID: 1788510343}
   - component: {fileID: 1788510342}
   - component: {fileID: 1788510346}
-  - component: {fileID: 1788510347}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -1241,7 +1240,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1788510341}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6e5f94180ea9d8c4da32de5d1c2dc48b, type: 3}
   m_Name: 
@@ -1254,23 +1253,5 @@ MonoBehaviour:
   anguloEjeY: 0
   anguloEjeZ: 0
   anguloEjeX: 0
---- !u!114 &1788510347
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1788510341}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5111d9536a318824d9045ac15ef779df, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  direccionUp: 0
-  derecha: {fileID: 1738984097}
-  izquierda: {fileID: 912642936}
-  ejeRotacion: {x: 0, y: 0, z: 0}
-  valorY: 0
-  anguloEjeY: 0
-  anguloEjeZ: 0
-  anguloEjeX: 0
   actualizarRotacion: 1
+  punto: 0
