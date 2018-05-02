@@ -635,7 +635,7 @@ GameObject:
   m_Component:
   - component: {fileID: 912642936}
   - component: {fileID: 912642935}
-  m_Layer: 9
+  m_Layer: 0
   m_Name: Izquierda
   m_TagString: Untagged
   m_Icon: {fileID: 7707008975528953803, guid: 0000000000000000d000000000000000, type: 0}
@@ -1056,7 +1056,7 @@ Transform:
   m_GameObject: {fileID: 1435270637}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.5, y: 0.6, z: 0.5}
   m_Children:
   - {fileID: 2071464297}
   - {fileID: 1867904040}
@@ -1400,7 +1400,7 @@ Transform:
   m_GameObject: {fileID: 1788510341}
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -0, y: 0, z: 0}
-  m_LocalScale: {x: 0.4, y: 0.6, z: 0.4}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1435270638}
   m_Father: {fileID: 0}
@@ -1420,11 +1420,7 @@ MonoBehaviour:
   direccionUp: 0
   derecha: {fileID: 1738984097}
   izquierda: {fileID: 912642936}
-  ejeRotacion: {x: 0, y: 0, z: 0}
-  puntoLimite: 0.8
-  anguloEjeY: 0
-  anguloEjeZ: 0
-  anguloEjeX: 0
+  puntoLimite: 0.6
   actualizarRotacion: 1
   punto: 0
 --- !u!1 &1867904039
