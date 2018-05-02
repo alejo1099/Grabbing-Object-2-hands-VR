@@ -25,9 +25,7 @@ public class RotarSimple : MonoBehaviour
     private void ActualizarRotacion()
     {
         Vector3 forward = (derecha.position - izquierda.position).normalized;
-        //Vector3 up = Quaternion.Euler(ejeRotacion.normalized) * forward;
-        transform.rotation = Quaternion.LookRotation(forward);
-        Quaternion rot = Quaternion.LookRotation(forward, transform.up);
-        ejeRotacion = transform.up;
+        Vector3 up = Quaternion.Euler(ejeRotacion.normalized) * forward;
+        transform.rotation = Quaternion.LookRotation(forward, up);
     }
 }

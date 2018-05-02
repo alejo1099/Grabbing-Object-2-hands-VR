@@ -10,6 +10,7 @@ public class RotarObjeto : MonoBehaviour
     public DireccionUp direccionUp;
 
     public Transform derecha, izquierda;
+    private Transform hijo;
 
     private Vector3 ejeRotacion;
     private Vector3 direccion;
@@ -30,20 +31,15 @@ public class RotarObjeto : MonoBehaviour
     public bool actualizarRotacion = true;
     private bool anguloObtenido;
     private bool interpolar = true;
-    private bool upwardObtenido;
+    private bool rightWardObtenido;
+    private bool hijoRestaurado;
 
     public float punto;
 
     private void Start()
     {
-        Quaternion rotacionHijo = transform.GetChild(0).rotation;
-        Vector3 posicionHijo = transform.GetChild(0).position;
-        interpolar = false;
-        ActualizarPosicion();
-        ActualizarRotacion();
-        interpolar = true;
-        transform.GetChild(0).position = posicionHijo;
-        transform.GetChild(0).rotation = rotacionHijo;
+        hijo = transform.GetChild(0);
+        MantenerRelacionHijo();
     }
 
     private void FixedUpdate()
@@ -66,30 +62,32 @@ public class RotarObjeto : MonoBehaviour
 
         if (actualizarRotacion)
         {
-            if (direccionUp == DireccionUp.Arriba)
-                VerificarAnguloCartesianoGlobalEjeY();
-            else if (direccionUp == DireccionUp.Abajo)
-                VerificarAnguloCartesianoEjeYInverso();
+            if (!hijoRestaurado)
+                MantenerRelacionHijo();
+
+            //if (direccionUp == DireccionUp.Arriba)
+            VerificarAnguloCartesianoGlobalEjeY();
+            //else if (direccionUp == DireccionUp.Abajo)
+            //  VerificarAnguloCartesianoEjeYInverso();
 
             Vector3 arriba = Quaternion.Euler(ejeRotacion.normalized) * direccion;
             Quaternion rotacionRelativa = Quaternion.LookRotation(direccion, arriba);
-            if (interpolar)
-                transform.rotation = Quaternion.Slerp(transform.rotation, rotacionRelativa, Time.deltaTime * 6f);
-            else
-                transform.rotation = rotacionRelativa;
+            //if (interpolar)
+            //    transform.rotation = Quaternion.Slerp(transform.rotation, rotacionRelativa, Time.deltaTime * 6f);
+            //else
+            transform.rotation = rotacionRelativa;
 
-            if (upwardObtenido)
-                upwardObtenido = false;
+            if (rightWardObtenido)
+                rightWardObtenido = false;
         }
         else
         {
-            if (!upwardObtenido)
+            if (hijoRestaurado) hijoRestaurado = false;
+            if (!rightWardObtenido)
             {
-                upWard = transform.up;
-                upwardObtenido = true;
+                rightWardObtenido = true;
                 rightWard = transform.right;
             }
-            //rightWard = Vector3.Cross(direccion, upWard);
             Vector3 direcionArriba = Vector3.Cross(direccion, rightWard);
             Debug.DrawRay(transform.position, direccion, Color.blue);
             Debug.DrawRay(transform.position, direcionArriba, Color.green);
@@ -274,5 +272,18 @@ public class RotarObjeto : MonoBehaviour
 
         Vector3 vectorFinal = Vector3.Lerp(vectorEjeZ, vectorEjeX, interpolacion);
         ejeRotacion = vectorFinal;
+    }
+
+    private void MantenerRelacionHijo()
+    {
+        hijoRestaurado = true;
+        Quaternion rotacionHijo = hijo.rotation;
+        Vector3 posicionHijo = hijo.position;
+        //interpolar = false;
+        ActualizarPosicion();
+        ActualizarRotacion();
+        //interpolar = true;
+        hijo.position = posicionHijo;
+        hijo.rotation = rotacionHijo;
     }
 }
