@@ -1,11 +1,6 @@
 ﻿using UnityEngine;
 
-public enum DireccionUp
-{
-    Arriba, Abajo
-}
-
-public class RotarObjeto : MonoBehaviour
+public class RotacionCompleja : MonoBehaviour
 {
     public DireccionUp direccionUp;
 
@@ -61,8 +56,8 @@ public class RotarObjeto : MonoBehaviour
 
         if (actualizarRotacion)
         {
-            // if (!hijoRestaurado)
-            //     MantenerRelacionHijo();
+            if (!hijoRestaurado)
+                MantenerRelacionHijo();
 
             if (direccionUp == DireccionUp.Arriba)
                 VerificarAnguloCartesianoGlobalEjeY();
@@ -81,16 +76,13 @@ public class RotarObjeto : MonoBehaviour
         }
         else
         {
-            //if (hijoRestaurado) hijoRestaurado = false;
             if (!rightWardObtenido)
             {
                 rightWardObtenido = true;
                 rightWard = transform.right;
+                hijoRestaurado = false;
             }
             Vector3 direcionArriba = Vector3.Cross(direccion, rightWard);
-            // Debug.DrawRay(transform.position, direccion, Color.blue);
-            // Debug.DrawRay(transform.position, direcionArriba, Color.green);
-            // Debug.DrawRay(transform.position, rightWard, Color.red);
             Quaternion rotacionRelativa = Quaternion.LookRotation(direccion, direcionArriba);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotacionRelativa, Time.deltaTime * 10f);
         }
@@ -284,5 +276,7 @@ public class RotarObjeto : MonoBehaviour
         interpolar = true;
         hijo.position = posicionHijo;
         hijo.rotation = rotacionHijo;
+        Quaternion rotLocal = hijo.localRotation;
+        hijo.localRotation = Quaternion.Euler(rotLocal.eulerAngles.x, rotLocal.eulerAngles.y, 0f);
     }
 }
