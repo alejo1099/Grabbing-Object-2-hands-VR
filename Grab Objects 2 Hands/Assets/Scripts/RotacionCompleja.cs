@@ -9,8 +9,10 @@ public class RotacionCompleja : MonoBehaviour
 
     private Vector3 ejeRotacion;
     private Vector3 direccion;
+    private Vector3 rotacionFinalHijo;
     private Vector3 upWard;
     private Vector3 rightWard;
+    private Vector3 vectorZero;
 
     private float ultimoAnguloZ;
     private float ultimoAnguloX;
@@ -33,7 +35,8 @@ public class RotacionCompleja : MonoBehaviour
     private void Start()
     {
         hijo = transform.GetChild(0);
-        MantenerRelacionHijo();
+        //MantenerRelacionHijo();
+        hijoRestaurado = true;
     }
 
     private void FixedUpdate()
@@ -71,8 +74,7 @@ public class RotacionCompleja : MonoBehaviour
             else
                 transform.rotation = rotacionRelativa;
 
-            if (rightWardObtenido)
-                rightWardObtenido = false;
+            if (rightWardObtenido) rightWardObtenido = false;
         }
         else
         {
@@ -81,6 +83,7 @@ public class RotacionCompleja : MonoBehaviour
                 rightWardObtenido = true;
                 rightWard = transform.right;
                 hijoRestaurado = false;
+                ObtenerVectorZero();
             }
             Vector3 direcionArriba = Vector3.Cross(direccion, rightWard);
             Quaternion rotacionRelativa = Quaternion.LookRotation(direccion, direcionArriba);
@@ -137,6 +140,13 @@ public class RotacionCompleja : MonoBehaviour
             direccionUp = DireccionUp.Abajo;
         else
             direccionUp = DireccionUp.Arriba;
+    }
+
+    private void ObtenerVectorZero()
+    {
+        Vector3 direccionY = direccion;
+        direccionY.y = 0f;
+        vectorZero = Quaternion.Euler(0f, -90f, 0f) * direccionY;
     }
 
     private void VerificarAnguloCartesianoGlobalEjeY()
@@ -268,15 +278,91 @@ public class RotacionCompleja : MonoBehaviour
     private void MantenerRelacionHijo()
     {
         hijoRestaurado = true;
-        Quaternion rotacionHijo = hijo.rotation;
+        VerificarAnguloCartesianoZonaCero();
+        //Quaternion rotacionHijo = hijo.rotation;
         Vector3 posicionHijo = hijo.position;
         interpolar = false;
         ActualizarPosicion();
         ActualizarRotacion();
         interpolar = true;
         hijo.position = posicionHijo;
-        hijo.rotation = rotacionHijo;
-        Quaternion rotLocal = hijo.localRotation;
-        hijo.localRotation = Quaternion.Euler(rotLocal.eulerAngles.x, rotLocal.eulerAngles.y, 0f);
+        hijo.localRotation = Quaternion.Euler(rotacionFinalHijo);
+        //Quaternion rotLocal = hijo.localRotation;
+        //hijo.localRotation = Quaternion.Euler(0f, 0f, rotLocal.eulerAngles.z);
+
+    }
+
+    private void VerificarAnguloCartesianoZonaCero()
+    {
+        Vector3 direccionY = direccion;
+        direccionY.y = 0;
+        anguloEjeY = Vector3.SignedAngle(direccionY, vectorZero, Vector3.up);
+
+        if (anguloEjeY <= 0f && anguloEjeY >= -90f)
+            ActualizarZonaCeroCuadranteI(anguloEjeY);
+        else if (anguloEjeY >= 0f && anguloEjeY <= 90f)
+            ActualizarZonaCeroCuadranteII(anguloEjeY);
+        else if (anguloEjeY >= 90f && anguloEjeY <= 180f)
+            ActualizarZonaCeroCuadranteIII(anguloEjeY);
+        else if (anguloEjeY <= -90f && anguloEjeY >= -180f)
+            ActualizarZonaCeroCuadranteIV(anguloEjeY);
+
+        //print(rotacionFinalHijo);
+    }
+
+    private void ActualizarZonaCeroCuadranteI(float angulo)
+    {
+        float interpolacion = Mathf.Abs(angulo) / 90f;
+        Vector3 vectorEjeZ = new Vector3(0f, 0f, 90f);
+
+        Vector3 vectorFinal = Vector3.Lerp(vectorEjeZ, Vector3.zero, interpolacion);
+        // Quaternion rotacionInversa = hijo.localRotation * Quaternion.Euler(0f, 0f, 180f);
+        // Vector3 angulosEuler = rotacionInversa.eulerAngles;
+        Vector3 angulosEuler = rotacionFinalHijo;
+        //angulosEuler.z -= 180f;
+        rotacionFinalHijo = angulosEuler + vectorFinal;
+        print("Euler " + angulosEuler + " VectorFinal " + vectorFinal + " Rotacion final " + rotacionFinalHijo);
+    }
+
+    private void ActualizarZonaCeroCuadranteII(float angulo)
+    {
+        float interpolacion = Mathf.Abs(angulo) / 90f;
+        Vector3 vectorEjeZ = new Vector3(0f, 0f, 90f);
+
+        Vector3 vectorFinal = Vector3.Lerp(vectorEjeZ, Vector3.zero, interpolacion);
+        // Quaternion rotacionInversa = hijo.localRotation * Quaternion.Euler(0f, 0f, 180f);
+        // Vector3 angulosEuler = rotacionInversa.eulerAngles;
+        Vector3 angulosEuler = rotacionFinalHijo;
+        //angulosEuler.z -= 180f;
+        rotacionFinalHijo = angulosEuler + vectorFinal;
+        print("Euler " + angulosEuler + " VectorFinal " + vectorFinal + " Rotacion final " + rotacionFinalHijo);
+    }
+
+    private void ActualizarZonaCeroCuadranteIII(float angulo)
+    {
+        float interpolacion = (Mathf.Abs(angulo) - 90f) / 90f;
+        Vector3 vectorEjeZ = new Vector3(0f, 0f, 90f);
+
+        Vector3 vectorFinal = Vector3.Lerp(Vector3.zero, vectorEjeZ, interpolacion);
+        // Quaternion rotacionInversa = hijo.localRotation * Quaternion.Euler(0f, 0f, 180f);
+        // Vector3 angulosEuler = rotacionInversa.eulerAngles;
+        Vector3 angulosEuler = rotacionFinalHijo;
+        //angulosEuler.z -= 180f;
+        rotacionFinalHijo = angulosEuler + vectorFinal;
+        print("Euler " + angulosEuler + " VectorFinal " + vectorFinal + " Rotacion final " + rotacionFinalHijo);
+    }
+
+    private void ActualizarZonaCeroCuadranteIV(float angulo)
+    {
+        float interpolacion = (Mathf.Abs(angulo) - 90f) / 90f;
+        Vector3 vectorEjeZ = new Vector3(0f, 0f, 90f);
+
+        Vector3 vectorFinal = Vector3.Lerp(Vector3.zero, vectorEjeZ, interpolacion);
+        // Quaternion rotacionInversa = hijo.localRotation * Quaternion.Euler(0f, 0f, 180f);
+        // Vector3 angulosEuler = rotacionInversa.eulerAngles;
+        Vector3 angulosEuler = rotacionFinalHijo;
+        //angulosEuler.z -= 180f;
+        rotacionFinalHijo = angulosEuler + vectorFinal;
+        print("Euler " + angulosEuler + " VectorFinal " + vectorFinal + " Rotacion final " + rotacionFinalHijo);
     }
 }
