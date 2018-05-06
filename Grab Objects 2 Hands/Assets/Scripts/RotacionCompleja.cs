@@ -287,9 +287,9 @@ public class RotacionCompleja : MonoBehaviour
         interpolar = true;
         hijo.position = posicionHijo;
         hijo.localRotation = Quaternion.Euler(rotacionFinalHijo);
-        //Quaternion rotLocal = hijo.localRotation;
-        //hijo.localRotation = Quaternion.Euler(0f, 0f, rotLocal.eulerAngles.z);
-
+        //hijo.rotation = rotacionHijo;
+        //Quaternion rotLocal = hijo.rotation;
+        //hijo.rotation = Quaternion.Euler(0f, 0f, rotLocal.eulerAngles.z);
     }
 
     private void VerificarAnguloCartesianoZonaCero()
@@ -313,7 +313,7 @@ public class RotacionCompleja : MonoBehaviour
     private void ActualizarZonaCeroCuadranteI(float angulo)
     {
         float interpolacion = Mathf.Abs(angulo) / 90f;
-        Vector3 vectorEjeZ = new Vector3(0f, 0f, 90f);
+        Vector3 vectorEjeZ = new Vector3(0f, 0f, -90f);
 
         Vector3 vectorFinal = Vector3.Lerp(vectorEjeZ, Vector3.zero, interpolacion);
         // Quaternion rotacionInversa = hijo.localRotation * Quaternion.Euler(0f, 0f, 180f);
@@ -321,13 +321,13 @@ public class RotacionCompleja : MonoBehaviour
         Vector3 angulosEuler = rotacionFinalHijo;
         //angulosEuler.z -= 180f;
         rotacionFinalHijo = angulosEuler + vectorFinal;
-        print("Euler " + angulosEuler + " VectorFinal " + vectorFinal + " Rotacion final " + rotacionFinalHijo);
+        print("I Euler " + angulosEuler + " VectorFinal " + vectorFinal + " Rotacion final " + rotacionFinalHijo);
     }
 
     private void ActualizarZonaCeroCuadranteII(float angulo)
     {
         float interpolacion = Mathf.Abs(angulo) / 90f;
-        Vector3 vectorEjeZ = new Vector3(0f, 0f, 90f);
+        Vector3 vectorEjeZ = new Vector3(0f, 0f, -90f);
 
         Vector3 vectorFinal = Vector3.Lerp(vectorEjeZ, Vector3.zero, interpolacion);
         // Quaternion rotacionInversa = hijo.localRotation * Quaternion.Euler(0f, 0f, 180f);
@@ -335,7 +335,7 @@ public class RotacionCompleja : MonoBehaviour
         Vector3 angulosEuler = rotacionFinalHijo;
         //angulosEuler.z -= 180f;
         rotacionFinalHijo = angulosEuler + vectorFinal;
-        print("Euler " + angulosEuler + " VectorFinal " + vectorFinal + " Rotacion final " + rotacionFinalHijo);
+        print("II Euler " + angulosEuler + " VectorFinal " + vectorFinal + " Rotacion final " + rotacionFinalHijo);
     }
 
     private void ActualizarZonaCeroCuadranteIII(float angulo)
@@ -349,7 +349,7 @@ public class RotacionCompleja : MonoBehaviour
         Vector3 angulosEuler = rotacionFinalHijo;
         //angulosEuler.z -= 180f;
         rotacionFinalHijo = angulosEuler + vectorFinal;
-        print("Euler " + angulosEuler + " VectorFinal " + vectorFinal + " Rotacion final " + rotacionFinalHijo);
+        print("III Euler " + angulosEuler + " VectorFinal " + vectorFinal + " Rotacion final " + rotacionFinalHijo);
     }
 
     private void ActualizarZonaCeroCuadranteIV(float angulo)
@@ -363,6 +363,6 @@ public class RotacionCompleja : MonoBehaviour
         Vector3 angulosEuler = rotacionFinalHijo;
         //angulosEuler.z -= 180f;
         rotacionFinalHijo = angulosEuler + vectorFinal;
-        print("Euler " + angulosEuler + " VectorFinal " + vectorFinal + " Rotacion final " + rotacionFinalHijo);
+        print("IV Euler " + angulosEuler + " VectorFinal " + vectorFinal + " Rotacion final " + rotacionFinalHijo);
     }
 }
