@@ -1,2 +1,2 @@
-# Grabbing-Object-2-hands-VR
-Development of grabbing object with 2 hands, in HTC VIVE with Unity
+# Grabbing Objects with 2 controls in VR
+Grabbing Objects with 2 controls in VR,  Rotate an Object with 2 positions, Follow a target without lose orientation 
