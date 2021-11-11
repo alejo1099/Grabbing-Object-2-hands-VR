@@ -1,12 +1,9 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-// With this code we can rotate a object with two points of reference, in this case right hand and left hand
-// This code is intended for VR
-//This code is almost exactly the same that Follow Target
-public class RotateObject : MonoBehaviour
+public class CodeExplain : MonoBehaviour
 {
-    // References to the two points
+// References to the two points
     [SerializeField]
     private Transform leftHand, rightHand;
 
@@ -18,7 +15,7 @@ public class RotateObject : MonoBehaviour
     private Vector3 right, left, forward, up, down;
 
     // Save previous directions and currentAverageUp here
-    private Queue<Vector3> trackingAxisUp, trackingDirections;
+    private Queue<Vector3> savedAxisUp, savedDirections;
 
     // Mean vector(direction) of all elements of trackingAxisUp
     private Vector3 currentAverageUp;
@@ -40,12 +37,12 @@ public class RotateObject : MonoBehaviour
         transform.forward = previousDirection = currentDirection;
 
         //Fill the trackers with initial content
-        trackingAxisUp = new Queue<Vector3>(5);
+        savedAxisUp = new Queue<Vector3>(5);
         for (int i = 0; i < 5; i++)
-            trackingAxisUp.Enqueue(transform.up);
-        trackingDirections = new Queue<Vector3>(4);
+            savedAxisUp.Enqueue(transform.up);
+        savedDirections = new Queue<Vector3>(4);
         for (int i = 0; i < 4; i++)
-            trackingDirections.Enqueue(currentDirection);
+            savedDirections.Enqueue(currentDirection);
 
         restart = true;
     }
@@ -98,20 +95,20 @@ public class RotateObject : MonoBehaviour
         // Like said above, we fill the trackers with update(current) data
         if(restart) return;
         for (int i = 0; i < 5; i++) {
-            trackingAxisUp.Dequeue();
-            trackingAxisUp.Enqueue(transform.up);
+            savedAxisUp.Dequeue();
+            savedAxisUp.Enqueue(transform.up);
         }
         for (int i = 0; i < 4; i++) {
-            trackingDirections.Dequeue();
-            trackingDirections.Enqueue(currentDirection);
+            savedDirections.Dequeue();
+            savedDirections.Enqueue(currentDirection);
         }
         restart = true;
     }
 
     // We only tracking the last 4 directions
     private void UpdateDirections() {
-        trackingDirections.Dequeue(); //Delete the last direction
-        trackingDirections.Enqueue(currentDirection); // push the update direction
+        savedDirections.Dequeue(); //Delete the last direction
+        savedDirections.Enqueue(currentDirection); // push the update direction
         CalculateCurrentRotationAxis();
     }
 
@@ -119,7 +116,7 @@ public class RotateObject : MonoBehaviour
     // and where is upward(hard part)
     // You can search "Rodrigues' rotation formula" to know the idea behind this
     private void CalculateCurrentRotationAxis() {
-        Vector3[] arrDirections = trackingDirections.ToArray(); // We use the directions that we have saved
+        Vector3[] arrDirections = savedDirections.ToArray(); // We use the directions that we have saved
 
         //Here we will make something similar to 3d cartesian plane   (x, y, z) axis
         //but limited to a circle, this circle with radius 1, and origin in "this position"(transform.position)
@@ -186,8 +183,8 @@ public class RotateObject : MonoBehaviour
 
     // We only tracking the last 5 Up axis
     private void UpdateTrackingAxisUp(Vector3 newElement) {
-        trackingAxisUp.Dequeue();
-        trackingAxisUp.Enqueue(newElement);
+        savedAxisUp.Dequeue();
+        savedAxisUp.Enqueue(newElement);
         CalculateAverageAxisUp(newElement);
     }
 
@@ -195,7 +192,7 @@ public class RotateObject : MonoBehaviour
     // If we just choice the most near axis to transform.up, we would get an inestable axis that will cause skips bewtween each rotation
     //For prevent this we get the mean of our saved axis Up
     private void CalculateAverageAxisUp(Vector3 newAxis) {
-        Vector3[] vectors = trackingAxisUp.ToArray();
+        Vector3[] vectors = savedAxisUp.ToArray();
         Vector3 averageUp = Vector3.zero;
         for (int i = 0; i < 5; i++)
             averageUp += vectors[i];

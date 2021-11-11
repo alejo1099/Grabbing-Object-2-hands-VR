@@ -10,7 +10,7 @@ public class FollowTarget : MonoBehaviour
 
     private Vector3 right, left, forward, up, down;
 
-    private Queue<Vector3> trackingAxisUp, trackingDirections;
+    private Queue<Vector3> savedAxisUp, savedDirections;
 
     private Vector3 currentAverageUp;
 
@@ -21,12 +21,12 @@ public class FollowTarget : MonoBehaviour
     {
         currentDirection = (target.position - transform.position).normalized;
         transform.forward = previousDirection = currentDirection;
-        trackingAxisUp = new Queue<Vector3>(5);
+        savedAxisUp = new Queue<Vector3>(5);
         for (int i = 0; i < 5; i++)
-            trackingAxisUp.Enqueue(transform.up);
-        trackingDirections = new Queue<Vector3>(4);
+            savedAxisUp.Enqueue(transform.up);
+        savedDirections = new Queue<Vector3>(4);
         for (int i = 0; i < 4; i++)
-            trackingDirections.Enqueue(currentDirection);
+            savedDirections.Enqueue(currentDirection);
         restart = true;
     }
 
@@ -50,23 +50,23 @@ public class FollowTarget : MonoBehaviour
 
     private void RestartQueues() {
         for (int i = 0; i < 5; i++) {
-            trackingAxisUp.Dequeue();
-            trackingAxisUp.Enqueue(currentAverageUp);
+            savedAxisUp.Dequeue();
+            savedAxisUp.Enqueue(currentAverageUp);
         }
         for (int i = 0; i < 4; i++) {
-            trackingDirections.Dequeue();
-            trackingDirections.Enqueue(currentDirection);
+            savedDirections.Dequeue();
+            savedDirections.Enqueue(currentDirection);
         }
     }
 
     private void UpdateDirections() {
-        trackingDirections.Dequeue();
-        trackingDirections.Enqueue(currentDirection);
+        savedDirections.Dequeue();
+        savedDirections.Enqueue(currentDirection);
         CalculateCurrentRotationAxis();
     }
 
     private void CalculateCurrentRotationAxis() {
-        Vector3[] arrDirections = trackingDirections.ToArray();
+        Vector3[] arrDirections = savedDirections.ToArray();
         Vector3 midPointDir = (arrDirections[0] + arrDirections[3]) * 0.5f;
         forward = midPointDir.normalized;
         right = (arrDirections[3] - arrDirections[0]).normalized;
@@ -112,13 +112,13 @@ public class FollowTarget : MonoBehaviour
     }
 
     private void UpdateTrackingAxisUp(Vector3 newElement) {
-        trackingAxisUp.Dequeue();
-        trackingAxisUp.Enqueue(newElement);
+        savedAxisUp.Dequeue();
+        savedAxisUp.Enqueue(newElement);
         CalculateAverageAxisUp(newElement);
     }
 
     private void CalculateAverageAxisUp(Vector3 newAxis) {
-        Vector3[] vectors = trackingAxisUp.ToArray();
+        Vector3[] vectors = savedAxisUp.ToArray();
         Vector3 averageUp = Vector3.zero;
         for (int i = 0; i < 5; i++)
             averageUp += vectors[i];
