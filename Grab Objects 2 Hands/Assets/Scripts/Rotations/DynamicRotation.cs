@@ -1,24 +1,26 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class FollowTarget : MonoBehaviour
+public class DynamicRotation : MonoBehaviour
 {
-    public Transform target;
+    [SerializeField]
+    private Transform leftHand, rightHand;
 
     private Vector3 currentDirection, previousDirection;
 
     private Vector3 right, left, forward, up, down;
-    private Vector3 minusRight, minusLeft;
 
     private Queue<Vector3> savedAxisUp, savedDirections;
 
     private Vector3 currentAverageUp;
 
     private bool restart;
-    
-    private void Start()
-    {
-        currentDirection = (target.position - transform.position).normalized;
+
+    private float currentAngle;
+    private float angularSpeed;
+
+    private void Start() {
+        currentDirection = (rightHand.position - leftHand.position).normalized;
         transform.forward = previousDirection = currentDirection;
         savedAxisUp = new Queue<Vector3>(5);
         for (int i = 0; i < 5; i++)
@@ -29,33 +31,53 @@ public class FollowTarget : MonoBehaviour
         restart = true;
     }
 
-    void Update()
-    {
+    void Update() {
+        if(Input.GetAxis("Mouse ScrollWheel") != 0)
+            RotateAroundCurrentAxis();
+        else
+            UpdatePosition();
+    }
+
+    private void RotateAroundCurrentAxis() {
+        Vector3 localUp = transform.forward;
+        Vector3 localForward = transform.up;
+        Vector3 localRight = Vector3.Cross(localUp, localForward);
+        float degreesOfRotation = Input.GetAxis("Mouse ScrollWheel") * 10f;
+        degreesOfRotation *= Mathf.Deg2Rad;
+        localForward = (localForward * Mathf.Cos(degreesOfRotation)) + (localRight * Mathf.Sin(degreesOfRotation));
+        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(localUp, localForward), 0.8f);
+        restart = false;
+    }
+
+    private void UpdatePosition() {
+        transform.position = (rightHand.position + leftHand.position) * 0.5f;
         CalculateDirection();
     }
 
     private void CalculateDirection() {
-        currentDirection = (target.position - transform.position).normalized;
-        if (currentDirection == previousDirection) {
-            if(!restart) {
-                RestartQueues();
-                restart = true;
-            }
+        currentDirection = (rightHand.position - leftHand.position).normalized;
+        currentAngle = Vector3.Angle(currentDirection, previousDirection);
+        angularSpeed = currentAngle/ Time.deltaTime;
+        if (angularSpeed < 5f) {
+            restart = false;
             return;
+        } else if(angularSpeed > 5f) {
+            RestartQueues();
+            UpdateDirections();
         }
-        restart = false;
-        UpdateDirections();
     }
 
     private void RestartQueues() {
+        if(restart) return;
         for (int i = 0; i < 5; i++) {
             savedAxisUp.Dequeue();
-            savedAxisUp.Enqueue(currentAverageUp);
+            savedAxisUp.Enqueue(transform.up);
         }
         for (int i = 0; i < 4; i++) {
             savedDirections.Dequeue();
             savedDirections.Enqueue(currentDirection);
         }
+        restart = true;
     }
 
     private void UpdateDirections() {
@@ -77,38 +99,35 @@ public class FollowTarget : MonoBehaviour
         SearchAxisNearToUp();
     }
 
-     private void SearchAxisNearToUp()
-    {
+    private void SearchAxisNearToUp() {
         float maxDot = Mathf.NegativeInfinity;
         Vector3 currentTransformUp = transform.up;
         int currentIndex = -1;
 
         float dot = Vector3.Dot(currentTransformUp, up);
-        if (dot > maxDot && dot > 0.9f) {
+        if (dot > maxDot && dot > 0.75f) {
             currentIndex = 0;
             maxDot = dot;
         }
         dot = Vector3.Dot(currentTransformUp, down);
-        if (dot > maxDot && dot > 0.9f) {
+        if (dot > maxDot && dot > 0.75f) {
             currentIndex = 1;
             maxDot = dot;
         }
         dot = Vector3.Dot(currentTransformUp, right);
-        if (dot > maxDot && dot > 0.9f) {
+        if (dot > maxDot && dot > 0.75f) {
             currentIndex = 2;
             maxDot = dot;
         }
         dot = Vector3.Dot(currentTransformUp, left);
-        if (dot > maxDot && dot > 0.9f) {
+        if (dot > maxDot && dot > 0.75f) {
             currentIndex = 3;
             maxDot = dot;
         }
-        
         if(currentIndex != -1)
             UpdateTrackingAxisUp(currentIndex == 0 ? up : currentIndex == 1 ? down : currentIndex == 2 ? right : left);
-        else {
+        else
             UpdateTrackingAxisUp(transform.up);
-        }
     }
 
     private void UpdateTrackingAxisUp(Vector3 newElement) {
@@ -124,27 +143,12 @@ public class FollowTarget : MonoBehaviour
             averageUp += vectors[i];
         averageUp = (averageUp * 0.2f).normalized;
         Rotate(averageUp);
-    }   
+    }
 
     private void Rotate(Vector3 currentUpward) {
         currentAverageUp = currentUpward;
-        float angle = Vector3.Angle(currentDirection, previousDirection);
-        float angularSpeed = angle / Time.deltaTime;
-        Quaternion q = Quaternion.LookRotation(forward, currentAverageUp);
-        transform.rotation = Quaternion.Slerp(transform.rotation, q, angularSpeed * 0.01f);
+        Quaternion rotationToApply = Quaternion.LookRotation(forward, currentAverageUp);
+        transform.rotation = Quaternion.Slerp(transform.rotation, rotationToApply, angularSpeed * 0.01f);
         previousDirection = currentDirection;
-    }
-
-    private void OnDrawGizmos() {
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawRay(transform.position, forward * 3);
-
-        Gizmos.color = Color.green;
-        Gizmos.DrawRay(transform.position, up * 3);
-        Gizmos.DrawRay(transform.position, down * 3);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(transform.position, right * 3);
-        Gizmos.DrawRay(transform.position, left * 3);
     }
 }

@@ -12,15 +12,11 @@ public class RotationForVR : MonoBehaviour
     private Vector3 currentDirection, previousDirection;
 
     private Vector3 right, left, forward, up, down;
+    private Vector3 minusRight, minusLeft, negativeMinusRight, negativeMinusLeft;
 
-    private Queue<Vector3> savedAxisUp, savedDirections;
-
-    private Vector3 currentAverageUp;
+    private Queue<Vector3> savedDirections, savedAxisUp;
 
     private bool restart;
-
-    private float currentAngle;
-    private float angularSpeed;
 
     private void Start()
     {
@@ -30,17 +26,16 @@ public class RotationForVR : MonoBehaviour
         for (int i = 0; i < 5; i++)
             savedAxisUp.Enqueue(transform.up);
         savedDirections = new Queue<Vector3>(4);
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 20; i++)
             savedDirections.Enqueue(currentDirection);
         restart = true;
     }
 
-    void Update()
-    {
-        if(Input.GetAxis("Mouse ScrollWheel") != 0)
-            RotateAroundCurrentAxis();
-        else
-            UpdatePosition();
+    void Update() {
+        // if(Input.GetAxis("Mouse ScrollWheel") != 0)
+        //     RotateAroundCurrentAxis();
+        // else
+        UpdatePosition();
     }
 
     private void RotateAroundCurrentAxis() {
@@ -50,7 +45,7 @@ public class RotationForVR : MonoBehaviour
         float degreesOfRotation = Input.GetAxis("Mouse ScrollWheel") * 10f;
         degreesOfRotation *= Mathf.Deg2Rad;
         localForward = (localForward * Mathf.Cos(degreesOfRotation)) + (localRight * Mathf.Sin(degreesOfRotation));
-        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(localUp, localForward), 0.8f);
+        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(localUp, localForward), 1);
         restart = false;
     }
 
@@ -61,12 +56,13 @@ public class RotationForVR : MonoBehaviour
 
     private void CalculateDirection() {
         currentDirection = (rightHand.position - leftHand.position).normalized;
-        currentAngle = Vector3.Angle(currentDirection, previousDirection);
-        angularSpeed = currentAngle/ Time.deltaTime;
-        if (angularSpeed < 5f) {
+        float currentAngle = Vector3.Angle(currentDirection, previousDirection);
+        float angularSpeed = currentAngle / Time.deltaTime;
+        if(angularSpeed <= 5f) {
             restart = false;
             return;
-        } else if(angularSpeed > 5f) {
+        }
+        else if (angularSpeed > 5f) {
             RestartQueues();
             UpdateDirections();
         }
@@ -74,14 +70,12 @@ public class RotationForVR : MonoBehaviour
 
     private void RestartQueues() {
         if(restart) return;
-        for (int i = 0; i < 5; i++) {
-            savedAxisUp.Dequeue();
+        savedDirections.Clear();
+        savedAxisUp.Clear();
+        for (int i = 0; i < 5; i++)
             savedAxisUp.Enqueue(transform.up);
-        }
-        for (int i = 0; i < 4; i++) {
-            savedDirections.Dequeue();
+        for (int i = 0; i < 4; i++)
             savedDirections.Enqueue(currentDirection);
-        }
         restart = true;
     }
 
@@ -101,11 +95,27 @@ public class RotationForVR : MonoBehaviour
         right = Vector3.Cross(forward, up);
         down = -up;
         left = -right;
+        CalculateMinusRotationAxis();
+    }
+
+    //0,7071
+    private void CalculateMinusRotationAxis() {
+        float lenghtVector = 0.7071f;
+        Vector3 minOrigin = up * lenghtVector;
+        float magnitudeMinusUp = 1f - lenghtVector;
+        Vector3 minusUp = up - minOrigin;
+        Vector3 minusForward = currentDirection * magnitudeMinusUp;
+        minusRight = Vector3.Cross(minusForward, minusUp).normalized;
+        minusLeft = -(Vector3.Cross(minusForward, minusUp).normalized);
+
+        minusRight = (minOrigin + (minusRight * lenghtVector)).normalized;
+        minusLeft = (minOrigin + (minusLeft * lenghtVector)).normalized;
+        negativeMinusRight = -minusRight;
+        negativeMinusLeft = -minusLeft;
         SearchAxisNearToUp();
     }
 
-    private void SearchAxisNearToUp()
-    {
+    private void SearchAxisNearToUp() {
         float maxDot = Mathf.NegativeInfinity;
         Vector3 currentTransformUp = transform.up;
         int currentIndex = -1;
@@ -130,8 +140,30 @@ public class RotationForVR : MonoBehaviour
             currentIndex = 3;
             maxDot = dot;
         }
+        dot = Vector3.Dot(currentTransformUp, minusLeft);
+        if (dot > maxDot && dot > 0.75f) {
+            currentIndex = 4;
+            maxDot = dot;
+        }
+        dot = Vector3.Dot(currentTransformUp, minusRight);
+        if (dot > maxDot && dot > 0.75f) {
+            currentIndex = 5;
+            maxDot = dot;
+        }
+        dot = Vector3.Dot(currentTransformUp, negativeMinusRight);
+        if (dot > maxDot && dot > 0.75f) {
+            currentIndex = 6;
+            maxDot = dot;
+        }
+        dot = Vector3.Dot(currentTransformUp, negativeMinusLeft);
+        if (dot > maxDot && dot > 0.75f) {
+            currentIndex = 7;
+            maxDot = dot;
+        }
         if(currentIndex != -1)
-            UpdateTrackingAxisUp(currentIndex == 0 ? up : currentIndex == 1 ? down : currentIndex == 2 ? right : left);
+            UpdateTrackingAxisUp(currentIndex == 0 ? up : currentIndex == 1 ? down : currentIndex == 2 ? right : 
+            currentIndex == 3 ? left : currentIndex == 4 ? minusLeft : currentIndex == 5 ? minusRight : currentIndex == 6 ? 
+            negativeMinusRight : negativeMinusLeft);
         else
             UpdateTrackingAxisUp(transform.up);
     }
@@ -152,9 +184,28 @@ public class RotationForVR : MonoBehaviour
     }
 
     private void Rotate(Vector3 currentUpward) {
-        currentAverageUp = currentUpward;
-        Quaternion rotationToApply = Quaternion.LookRotation(forward, currentAverageUp);
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotationToApply, angularSpeed * 0.01f);
+        Quaternion q = Quaternion.LookRotation(forward, currentUpward);
+        transform.rotation = Quaternion.Slerp(transform.rotation, q, 1);
         previousDirection = currentDirection;
+    }
+
+    private void OnDrawGizmos() {
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawRay(transform.position, forward * 3);
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawRay(transform.position, up * 3);
+        Gizmos.DrawRay(transform.position, down * 3);
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(transform.position, right * 3);
+        Gizmos.DrawRay(transform.position, left * 3);
+
+        Gizmos.color = Color.black;
+        Gizmos.DrawRay(transform.position, minusLeft * 3);
+        Gizmos.DrawRay(transform.position, negativeMinusLeft * 3);
+        Gizmos.color = Color.white;
+        Gizmos.DrawRay(transform.position, minusRight * 3);
+        Gizmos.DrawRay(transform.position, negativeMinusRight * 3);
     }
 }
